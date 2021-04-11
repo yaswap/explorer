@@ -1,0 +1,13 @@
+extends layout
+
+block content   
+  .row
+    .col
+      .tabpanel
+        ul.nav.nav-tabs(role='tablist')
+          li.nav-item(role='presentation')
+            a.nav-link.active(href='#balance', aria-controls='balance', role='tab', data-toggle='tab') Balance
+      .tab-content
+        #balance.tabpanel.tab-pane.active 
+          include ./includes/tl_balance.pug
+  .row.footer-margin

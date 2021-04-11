@@ -152,6 +152,11 @@ html
               a.nav-link(href='/richlist')
                 span.fa.fa-btc
                 span.menu-text #{settings.locale.menu_richlist}
+          if settings.display.timelock == true
+            li#timelock
+              a.nav-link(href='/timelock')
+                span.fa.fa-btc
+                span.menu-text #{settings.locale.menu_timelock}
           if settings.display.markets == true
             li#markets
               a.nav-link.loading(href='/markets/'+settings.markets.default)

@@ -1,0 +1,30 @@
+.card.card-default
+  .card-header
+    form.form-inline.col-12.d-flex.justify-content-center(method='post', action='/timelock')
+        #index-search.form-group.d-flex.justify-content-center
+            input.form-control(type='text', name='redeemscript', placeholder=settings.locale.ex_redeemscript_message, style='min-width:80%;margin-right:5px;')
+            button.btn.btn-success(type='submit') #{settings.locale.ex_submit_button}
+  table.table.table-hover.table-bordered(cellspacing="0")
+    thead
+      tr
+        th(style='text-align:center;') 
+          span.fa.fa-flag-checkered
+        th #{settings.locale.tx_address}
+        th.hidden-xs #{settings.locale.rl_balance} (#{settings.symbol})
+        th.hidden-xs Locktime info
+    tbody
+      - var count = 0
+      each item in timelocklist
+        - count = count + 1
+        - var itemFixed = (parseInt(item.balance) / 100000000)
+        - var itemFixedParts = itemFixed.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
+        tr
+          td(style='text-align:center;') 
+            =count
+          td 
+            a(href='/address/'+item.a_id) #{item.a_id}
+            include ./rl_labels.pug
+          td.hidden-xs #{itemFixedParts[0]}.
+            span.decimal #{itemFixedParts[1]}
+          td.hidden-xs
+            =item.description
