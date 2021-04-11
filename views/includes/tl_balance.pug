@@ -29,7 +29,7 @@
           td.hidden-xs
             =item.description
             if !item.iscltv && item.csvinfo.length
-              p Below table list #{item.csvinfo.length} nearest timestamps which an amount of coins will be unlocked. If that amount of coins was unlocked but they haven't been used, it would also be listed in the table.
+              p Below table list maximum 10 nearest timestamps which an amount of coins will be unlocked. If that amount of coins was unlocked but they haven't been used, it would also be listed in the table.
               table.table.table-hover.table-bordered(cellspacing="0")
                 thead
                   tr
@@ -40,12 +40,14 @@
                   - var i = 0
                   each utxo in item.csvinfo
                     - i = i + 1
+                    - var amountFixed = (parseInt(utxo.amount) / 100000000)
+                    - var amountFixedParts = amountFixed.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
                     tr
                       td.hidden-xs
                         =i
                       td.hidden-xs
                         =utxo.timetouse_string
-                      td.hidden-xs
-                        =utxo.amount
+                      td.hidden-xs #{amountFixedParts[0]}.
+                        span.decimal #{amountFixedParts[1]}
 
 
