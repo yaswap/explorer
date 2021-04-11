@@ -129,6 +129,7 @@ is_locked(function (exists) {
   } else {
     create_lock(function (){
       console.log("script launched with pid: " + process.pid);
+      console.log("TACA sync.js ===> connect to database " + dbString);
       mongoose.connect(dbString, function(err) {
         if (err) {
           console.log('Unable to connect to database: %s', dbString);
@@ -140,6 +141,7 @@ is_locked(function (exists) {
               console.log('Run \'npm start\' to create database structures before running this script.');
               exit();
             } else {
+              console.log("TACA sync.js ===> call db.update_db ");
               db.update_db(settings.coin, function(stats){
                 if (settings.heavy == true) {
                   db.update_heavy(settings.coin, stats.count, 20, function(){
@@ -186,6 +188,8 @@ is_locked(function (exists) {
                     });
                   });
                 } else if (mode == 'update') {
+                  console.log("TACA sync.js ===> mode = update");
+                  console.log("TACA sync.js ===> call db.update_tx_db ");
                   db.update_tx_db(settings.coin, stats.last, stats.count, settings.update_timeout, function(){
                     db.update_richlist('received', function(){
                       db.update_richlist('balance', function(){
