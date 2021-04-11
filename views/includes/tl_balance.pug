@@ -28,3 +28,24 @@
             span.decimal #{itemFixedParts[1]}
           td.hidden-xs
             =item.description
+            if !item.iscltv && item.csvinfo.length
+              p Below table list #{item.csvinfo.length} nearest timestamps which an amount of coins will be unlocked. If that amount of coins was unlocked but they haven't been used, it would also be listed in the table.
+              table.table.table-hover.table-bordered(cellspacing="0")
+                thead
+                  tr
+                    th.hidden-xs No
+                    th.hidden-xs Time to unlock
+                    th.hidden-xs Amount
+                tbody
+                  - var i = 0
+                  each utxo in item.csvinfo
+                    - i = i + 1
+                    tr
+                      td.hidden-xs
+                        =i
+                      td.hidden-xs
+                        =utxo.timetouse_string
+                      td.hidden-xs
+                        =utxo.amount
+
+
