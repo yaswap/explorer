@@ -198,9 +198,7 @@ router.get('/richlist', function(req, res) {
 router.get('/timelock', function(req, res) {
   if (settings.display.timelock == true ) {
     db.get_timelocklist(function(timelocklist){
-      //console.log(richlist);
       if (timelocklist) {
-          //console.log(distribution);
           res.render('timelock', {
             active: 'timelock',
             timelocklist: timelocklist,
