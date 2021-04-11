@@ -1,11 +1,5 @@
 var mongoose = require('mongoose')
   , Schema = mongoose.Schema;
- 
-var CsvInfoSchema = new Schema({
-    txid: { type: String, lowercase: true, unique: true, index: true},
-    isused: { type: Boolean, default: false },
-    timetouse: { type: Number, default: 0 },
-  });
   
 var TimeLockSchema = new Schema({
     a_id: { type: String, unique: true, index: true, default: ""},
