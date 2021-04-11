@@ -154,4 +154,8 @@
     "heavy_changein": "Reward change in approximately",
     "heavy_key": "Key",
     "heavy_lastxvotes": "Last 20 votes",
+
+    // Timelock
+    "ex_duplicate_redeemscript": "The redeemscript already exists",
+	"ex_redeemscript_error": "The redeemscript is invalid",
 }

@@ -262,25 +262,6 @@ app.post('/address/:hash/claim', function(req, res){
   });
 })
 
-app.post('/timelock', function(req, res){
-  var redeemscript = req.body.redeemscript;
-  request({
-      url: 'http://127.0.0.1:' + settings.port + '/api/verifymessage?address='+address+ '&signature='+ signature + '&message=' + message,
-    method: 'GET',
-  }, function(error, response, body){
-    //console.log('error', error);
-    //console.log('response', response);
-    if(body == "false"){
-      console.log('failed');
-      res.json({"status": "failed", "error":true, "message": error});
-    }else if(body == "true"){
-      db.update_label(address, message, function(){
-        res.json({"status": "success"});
-      })
-    }
-  });
-})
-
 app.use('/ext/connections', function(req,res){
   db.get_peers(function(peers){
     res.send({data: peers});

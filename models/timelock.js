@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
  
 var CsvInfoSchema = new Schema({
     txid: { type: String, lowercase: true, unique: true, index: true},
-    isUsed: { type: Boolean, default: false },
+    isused: { type: Boolean, default: false },
     timetouse: { type: Number, default: 0 },
   });
   

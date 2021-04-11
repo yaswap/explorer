@@ -300,6 +300,29 @@ router.post('/search', function(req, res) {
   }
 });
 
+router.post('/timelock', function(req, res){
+  var redeemscript = req.body.redeemscript;
+  db.get_timelock(redeemscript, function(timelock) {
+    if(timelock) {
+      route_get_index(res, locale.ex_duplicate_redeemscript );
+    } else {
+      lib.describe_redeemscript(redeemscript, function(describeinfo) {
+        if (describeinfo != 'There was an error. Check your console.') {
+          db.add_timelock(describeinfo, function(err) {
+            if (err) {
+              route_get_index(res, err );
+            } else {
+              res.redirect('/timelock');
+            }
+          });
+        } else {
+          route_get_index(res, locale.ex_redeemscript_error );
+        }
+      });
+    }
+  });
+})
+
 router.get('/qr/:string', function(req, res) {
   if (req.params.string) {
     var address = qr.image(req.params.string, {
