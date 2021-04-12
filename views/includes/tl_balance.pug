@@ -12,6 +12,7 @@
         th #{settings.locale.tx_address}
         th.hidden-xs #{settings.locale.rl_balance} (#{settings.symbol})
         th.hidden-xs Locktime info
+        th.hidden-xs Raw redeemscript
     tbody
       - var count = 0
       each item in timelocklist
@@ -49,5 +50,7 @@
                         =utxo.timetouse_string
                       td.hidden-xs #{amountFixedParts[0]}.
                         span.decimal #{amountFixedParts[1]}
+          td.hidden-xs
+            =item.redeemscript
 
 
