@@ -50,6 +50,32 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes
+app.use('/api/address/:address/utxo', function(req,res){
+  db.get_utxo(req.params.address, function(utxo){
+    var return_info = []
+    lib.syncLoop(utxo.length, function (loop) {
+      // Update balance and transaction of addresses used as vin
+      var i = loop.iteration();
+
+      db.get_tx(utxo.txid, function(tx){
+        info = {
+          txid: utxo.txid,
+          vout: utxo.vout,
+          value: utxo.amount,
+          status: {
+            confirmed: true,
+            block_height: tx.blockindex,
+            block_hash: tx.blockhash,
+            block_time: tx.timestamp,
+          }
+        }
+        return_info.push(info);
+        loop.next();
+      })
+    })
+    res.send(return_info);
+  })
+});
 app.use('/api', bitcoinapi.app);
 app.use('/', routes);
 app.use('/ext/getmoneysupply', function(req,res){
