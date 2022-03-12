@@ -3,9 +3,9 @@ var mongoose = require('mongoose')
  
 var TxSchema = new Schema({
   txid: { type: String, lowercase: true, unique: true, index: true},
-  vin: { type: Array, default: [] },
-  vout: { type: Array, default: [] },
-  total: { type: Number, default: 0, index: true },
+  vin: { type: Array, default: [] }, // array of {vin_address, sent_amount}
+  vout: { type: Array, default: [] }, // array of {vout_address, received_amount}
+  total: { type: Number, default: 0, index: true }, // total value of vout
   timestamp: { type: Number, default: 0, index: true },
   blockhash: { type: String, index: true },
   blockindex: {type: Number, default: 0, index: true},
