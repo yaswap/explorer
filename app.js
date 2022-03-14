@@ -90,6 +90,29 @@ app.use('/api/address/:address', function(req,res){
   })
 });
 
+app.use('/api/tx/:txid/hex', function(req,res){
+  lib.get_rawtransaction(req.params.txid, function(tx){
+    res.send(tx)
+  }, 0)
+});
+
+app.use('/api/tx/:txid', function(req,res){
+  var return_info = {}
+  lib.get_rawtransaction(req.params.txid, function(tx){
+    return_info.hex = tx.hex
+    return_info.block_hash = tx.blockhash
+    return_info.confirmations = tx.confirmations
+
+    db.get_tx(req.params.txid, function(tx_info){
+      return_info.block_height = tx_info.blockindex
+      lib.calculate_total(tx_info.vin, function(vin_total){
+        return_info.fee = vin_total - tx_info.total
+        res.send(return_info);
+      })
+    })
+  })
+});
+
 app.use('/api', bitcoinapi.app);
 app.use('/', routes);
 app.use('/ext/getmoneysupply', function(req,res){
