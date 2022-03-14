@@ -76,6 +76,20 @@ app.use('/api/address/:address/utxo', function(req,res){
     res.send(return_info);
   })
 });
+
+app.use('/api/address/:address', function(req,res){
+  db.get_utxo_info(req.params.address, function(utxo_info){
+    db.get_txcount(req.params.address, function(txcount) {
+      return_info = {
+        address: req.params.address,
+        ...utxo_info,
+        tx_count: txcount
+      }
+      res.send(return_info);
+    })
+  })
+});
+
 app.use('/api', bitcoinapi.app);
 app.use('/', routes);
 app.use('/ext/getmoneysupply', function(req,res){
