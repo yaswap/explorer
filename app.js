@@ -113,6 +113,12 @@ app.use('/api/tx/:txid', function(req,res){
   })
 });
 
+app.post('/api/tx', function(req, res){
+  lib.send_rawtransaction(req.body, function(response){
+    res.json(response)
+  })
+})
+
 app.use('/api', bitcoinapi.app);
 app.use('/', routes);
 app.use('/ext/getmoneysupply', function(req,res){
