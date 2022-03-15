@@ -14,6 +14,7 @@ var express = require('express')
   , request = require('request');
 
 var app = express();
+const util = require('util');
 
 // bitcoinapi
 bitcoinapi.setWalletDetails(settings.wallet);
@@ -51,17 +52,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // routes
 app.use('/api/address/:address/utxo', function(req,res){
+  console.log("TACA ===> API /api/address/:address/utxo, address = %s", req.params.address)
   db.get_utxo(req.params.address, function(utxo){
     var return_info = []
     lib.syncLoop(utxo.length, function (loop) {
       // Update balance and transaction of addresses used as vin
       var i = loop.iteration();
 
-      db.get_tx(utxo.txid, function(tx){
+      console.log("TACA ===> API /api/address/:address/utxo, utxo[%s].txid = %s", i, utxo[i].txid)
+      db.get_tx(utxo[i].txid, function(tx){
         info = {
-          txid: utxo.txid,
-          vout: utxo.vout,
-          value: utxo.amount,
+          txid: utxo[i].txid,
+          vout: utxo[i].vout,
+          value: utxo[i].amount,
           status: {
             confirmed: true,
             block_height: tx.blockindex,
@@ -72,14 +75,18 @@ app.use('/api/address/:address/utxo', function(req,res){
         return_info.push(info);
         loop.next();
       })
+    }, function() {
+      res.send(return_info);
     })
-    res.send(return_info);
   })
 });
 
 app.use('/api/address/:address', function(req,res){
+  console.log("TACA ===> API /api/address/:address, address = %s", req.params.address)
   db.get_utxo_info(req.params.address, function(utxo_info){
+    console.log("TACA ===> API /api/address/:address, utxo_info = %s", util.inspect(utxo_info, true, null, true))
     db.get_txcount(req.params.address, function(txcount) {
+      console.log("TACA ===> API /api/address/:address, txcount = %s", util.inspect(txcount, true, null, true))
       return_info = {
         address: req.params.address,
         ...utxo_info,
@@ -104,17 +111,28 @@ app.use('/api/tx/:txid', function(req,res){
     return_info.confirmations = tx.confirmations
 
     db.get_tx(req.params.txid, function(tx_info){
-      return_info.block_height = tx_info.blockindex
-      lib.calculate_total(tx_info.vin, function(vin_total){
-        return_info.fee = vin_total - tx_info.total
-        res.send(return_info);
-      })
+      if (tx_info) {
+        return_info.block_height = tx_info.blockindex
+        lib.calculate_total(tx_info.vin, function(vin_total){
+          return_info.fee = vin_total - tx_info.total
+          res.send(return_info);
+        })
+      }
+      else {
+        return res.status(404).send({
+          name: 'NodeError',
+          message: 'Transaction not found'
+        });
+      }
+
     })
   })
 });
 
 app.post('/api/tx', function(req, res){
-  lib.send_rawtransaction(req.body, function(response){
+  console.log("TACA ===> POST API /api/tx, req.body = %s", req.body)
+  lib.send_rawtransaction(req.body.data, function(response){
+    console.log("TACA ===> POST API /api/tx, response = %s", response)
     res.json(response)
   })
 })
