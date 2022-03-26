@@ -72,7 +72,7 @@ block content
                       tr.table-info(style='text-align:center')
                         td #{settings.locale.new_coins}
                     else
-                      - var ramount = (r.amount / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
+                      - var ramount = (r.amount / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
                       - var ramountParts = ramount.split('.')
                       tr
                         td 
@@ -98,7 +98,7 @@ block content
               tbody
                 each r in tx.vout
                   if tx.vout.length > 0 
-                    - var ramount = (r.amount / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
+                    - var ramount = (r.amount / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
                     - var ramountParts = ramount.split('.')
                     tr.d-sm-block.d-md-none.d-none
                       td 
@@ -110,7 +110,7 @@ block content
                       td.success #{ramountParts[0]}.
                             span.decimal #{ramountParts[1]} #{settings.symbol}
                   else
-                    - var ramount = (r.amount / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
+                    - var ramount = (r.amount / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true})
                     - var ramountParts = ramount.split('.')
                   tr
                     td 

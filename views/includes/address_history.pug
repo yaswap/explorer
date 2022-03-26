@@ -34,7 +34,7 @@ script.
         var txhash = data[1]; //variables for better readability
         var out = data[2]; //variables for better readability
         var vin = data[3]; //variables for better readability
-        var balance = (data[4] / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}); //variables for better readability
+        var balance = (data[4] / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}); //variables for better readability
 
         var balanceParts = balance.split('.');
 
@@ -46,7 +46,7 @@ script.
         var rowclass = "info";
 
         if(out > 0 && vin > 0) {
-          amount = (out - vin) / 100000000
+          amount = (out - vin) / 1000000
           if (amount < 0) {
             amount = (amount * -1).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true});
             updown = "-";
@@ -60,12 +60,12 @@ script.
             //- $("td:eq(2)", row).html(amount).addClass("info");
           }
         } else if (out > 0) {
-          amount = (out / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true});
+          amount = (out / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true});
           updown = "+";
           rowclass = "success";
           //- $("td:eq(2)", row).html("+" + amount).addClass("success");
         } else {
-          amount = (vin / 100000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true});
+          amount = (vin / 1000000).toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true});
           updown = "-";
           rowclass = "danger";
           //- $("td:eq(2)", row).html("-" + amount).addClass("danger");

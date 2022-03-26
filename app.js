@@ -176,9 +176,9 @@ app.use('/ext/getaddress/:hash', function(req,res){
         }
         var a_ext = {
           address: address.a_id,
-          sent: (address.sent / 100000000),
-          received: (address.received / 100000000),
-          balance: (address.balance / 100000000).toString().replace(/(^-+)/mg, ''),
+          sent: (address.sent / 1000000),
+          received: (address.received / 1000000),
+          balance: (address.balance / 1000000).toString().replace(/(^-+)/mg, ''),
           last_txs: last_txs,
         };
         res.send(a_ext);
@@ -242,7 +242,7 @@ app.use('/ext/gettx/:txid', function(req, res) {
 app.use('/ext/getbalance/:hash', function(req,res){
   db.get_address(req.params.hash, function(address){
     if (address) {
-      res.send((address.balance / 100000000).toString().replace(/(^-+)/mg, ''));
+      res.send((address.balance / 1000000).toString().replace(/(^-+)/mg, ''));
     } else {
       res.send({ error: 'address not found.', hash: req.params.hash})
     }
@@ -269,7 +269,7 @@ app.use('/ext/getlasttxsajax/:min', function(req,res){
   if(typeof req.params.min === 'undefined' || isNaN(req.params.min ) || req.params.min  < 0){
     req.params.min  = 0;
   } else {
-    req.params.min  = (req.params.min * 100000000);
+    req.params.min  = (req.params.min * 1000000);
   }
   db.get_last_txs_ajax(req.query.start, req.query.length, req.params.min,function(txs, count){
     var data = [];
