@@ -53,47 +53,88 @@ app.use(express.static(path.join(__dirname, 'public')));
 // routes
 app.use('/api/address/:address/utxo', function(req,res){
   console.log("TACA ===> API /api/address/:address/utxo, address = %s", req.params.address)
-  db.get_utxo(req.params.address, function(utxo){
-    var return_info = []
-    lib.syncLoop(utxo.length, function (loop) {
-      // Update balance and transaction of addresses used as vin
-      var i = loop.iteration();
-
-      console.log("TACA ===> API /api/address/:address/utxo, utxo[%s].txid = %s", i, utxo[i].txid)
-      db.get_tx(utxo[i].txid, function(tx){
-        info = {
-          txid: utxo[i].txid,
-          vout: utxo[i].vout,
-          value: utxo[i].amount,
-          status: {
-            confirmed: true,
-            block_height: tx.blockindex,
-            block_hash: tx.blockhash,
-            block_time: tx.timestamp,
+  lib.get_blockcount(function(blockheight) {
+    db.get_utxo_mempool(blockheight, req.params.address, function(found, utxo_mempool){
+      var return_info = []
+      if(found) {
+        for(var i = 0; i < utxo_mempool.length; i++) {
+          console.log("TACA ===> API /api/address/:address/utxo_mempool, utxo_mempool[%s].txid = %s", i, utxo_mempool[i].txid)
+          info = {
+            txid: utxo_mempool[i].txid,
+            vout: utxo_mempool[i].vout,
+            value: utxo_mempool[i].amount,
+            status: {
+              confirmed: true,
+              block_height: utxo_mempool[i].blockutxoheight,
+            }
           }
+          return_info.push(info);
         }
-        return_info.push(info);
-        loop.next();
-      })
-    }, function() {
-      res.send(return_info);
+        res.send(return_info);
+      } else {
+        db.get_utxo(req.params.address, function(utxo){
+          lib.syncLoop(utxo.length, function (loop) {
+            // Update balance and transaction of addresses used as vin
+            var i = loop.iteration();
+      
+            console.log("TACA ===> API /api/address/:address/utxo, utxo[%s].txid = %s", i, utxo[i].txid)
+            db.get_tx(utxo[i].txid, function(tx){
+              info = {
+                txid: utxo[i].txid,
+                vout: utxo[i].vout,
+                value: utxo[i].amount,
+                status: {
+                  confirmed: true,
+                  block_height: tx.blockindex,
+                  block_hash: tx.blockhash,
+                  block_time: tx.timestamp,
+                }
+              }
+              return_info.push(info);
+              loop.next();
+            })
+          }, function() {
+            res.send(return_info);
+          })
+        })
+      }
     })
-  })
+  });
 });
 
 app.use('/api/address/:address', function(req,res){
   console.log("TACA ===> API /api/address/:address, address = %s", req.params.address)
-  db.get_utxo_info(req.params.address, function(utxo_info){
-    console.log("TACA ===> API /api/address/:address, utxo_info = %s", util.inspect(utxo_info, true, null, true))
-    db.get_txcount(req.params.address, function(txcount) {
-      console.log("TACA ===> API /api/address/:address, txcount = %s", util.inspect(txcount, true, null, true))
-      return_info = {
-        address: req.params.address,
-        ...utxo_info,
-        tx_count: txcount
+  lib.get_blockcount(function(blockheight) {
+    db.get_utxo_mempool_info(blockheight, req.params.address, function(utxo_mempool_info, new_txcount){
+      if(utxo_mempool_info) {
+        console.log("TACA ===> API /api/address/:address_mempool, utxo_mempool_info = %s", util.inspect(utxo_mempool_info, true, null, true))
+        db.get_txcount(req.params.address, function(txcount) {
+          console.log("TACA ===> API /api/address/:address_mempool, txcount = %s", txcount)
+          return_info = {
+            address: req.params.address,
+            ...utxo_mempool_info,
+            tx_count: txcount + new_txcount
+          }
+          res.send(return_info);
+        })
+      } else {
+        db.get_utxo_info(req.params.address, function(utxo_info){
+          console.log("TACA ===> API /api/address/:address, utxo_info = %s", util.inspect(utxo_info, true, null, true))
+          db.get_txcount(req.params.address, function(txcount) {
+            console.log("TACA ===> API /api/address/:address, txcount = %s", util.inspect(txcount, true, null, true))
+            return_info = {
+              address: req.params.address,
+              ...utxo_info,
+              tx_count: txcount
+            }
+            res.send(return_info);
+          })
+        })
       }
-      res.send(return_info);
     })
+
+
+
   })
 });
 

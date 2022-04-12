@@ -47,6 +47,9 @@ if (process.argv[2] == 'index') {
       case 'update':
         mode = 'update';
         break;
+      case 'mempool':
+        mode = 'mempool';
+        break;
       case 'check':
         mode = 'check';
         break;
@@ -226,6 +229,13 @@ is_locked(function (exists) {
                         });
                       });
                     });
+                  });
+                } else if (mode == 'mempool') {
+                  console.log("TACA sync.js ===> mode = mempool");
+                  console.log("TACA sync.js ===> call db.update_tx_mempool ");
+                  db.update_tx_mempool(stats.count, settings.check_timeout, function(){
+                    console.log('check mempool complete (block: %s)', stats.count);
+                    exit();
                   });
                 } else if (mode == 'reindex-rich') {
                   console.log('update started');
