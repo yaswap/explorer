@@ -15,6 +15,7 @@ var express = require('express')
 
 var app = express();
 const util = require('util');
+const cors = require('cors');
 
 // bitcoinapi
 bitcoinapi.setWalletDetails(settings.wallet);
@@ -43,6 +44,11 @@ if (settings.heavy != true) {
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(favicon(path.join(__dirname, settings.favicon)));
 app.use(logger('dev'));
 app.use(bodyParser.json());
