@@ -13,11 +13,12 @@ var mongoose = require('mongoose')
 
 var mode = 'update';
 var database = 'index';
+var reindex_tx = '';
 const util = require('util');
 
 // displays usage and exits
 function usage() {
-  console.log('Usage: node scripts/sync.js [database] [mode]');
+  console.log('Usage: node scripts/sync.js [database] [mode] [reindex_tx]');
   console.log('');
   console.log('database: (required)');
   console.log('index [mode] Main index: coin info/stats, transactions & addresses');
@@ -27,6 +28,9 @@ function usage() {
   console.log('update       Updates index from last sync to current block');
   console.log('check        checks index for (and adds) any missing transactions/addresses');
   console.log('reindex      Clears index then resyncs from genesis to current block');
+  console.log('reindex-tx   Recheck a transaction and update utxo');
+  console.log('');
+  console.log('reindex_tx: (required for reindex-tx mode only)');
   console.log('');
   console.log('notes:');
   console.log('* \'current block\' is the latest created block when script is executed.');
@@ -55,6 +59,10 @@ if (process.argv[2] == 'index') {
         break;
       case 'reindex':
         mode = 'reindex';
+        break;
+      case 'reindex-tx':
+        mode = 'reindex-tx';
+        reindex_tx = process.argv[4];
         break;
       case 'reindex-rich':
         mode = 'reindex-rich';
@@ -229,6 +237,11 @@ is_locked(function (exists) {
                 } else if (mode == 'mempool') {
                   db.update_tx_mempool(stats.count, settings.check_timeout, function(){
                     console.log('check mempool complete (block: %s)', stats.count);
+                    exit();
+                  });
+                } else if (mode == 'reindex-tx') {
+                  db.reindex_tx_db(reindex_tx, function(){
+                    console.log('reindex-tx complete for tx: %s', reindex_tx);
                     exit();
                   });
                 } else if (mode == 'reindex-rich') {
