@@ -62,6 +62,7 @@ app.use('/api/address/:address/utxo', function(req,res){
     db.get_utxo_mempool(blockheight, req.params.address, function(found, utxo_mempool){
       var return_info = []
       if(found) {
+        console.log("TACA ===> /api/address/:address/utxo, utxo_mempool = ", utxo_mempool)
         for(var i = 0; i < utxo_mempool.length; i++) {
           info = {
             txid: utxo_mempool[i].txid,
@@ -77,6 +78,7 @@ app.use('/api/address/:address/utxo', function(req,res){
         res.send(return_info);
       } else {
         db.get_utxo(req.params.address, function(utxo){
+          console.log("TACA ===> /api/address/:address/utxo, utxo = ", utxo)
           lib.syncLoop(utxo.length, function (loop) {
             // Update balance and transaction of addresses used as vin
             var i = loop.iteration();
