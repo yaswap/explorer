@@ -4,6 +4,8 @@ var express = require('express')
     , locale = require('../lib/locale')
     , db = require('../lib/database')
     , lib = require('../lib/explorer')
+    , mongoose = require('mongoose')
+    , Stats = require('../models/stats')
     , qr = require('qr-image');
 
 function route_get_block(res, blockhash) {
@@ -369,4 +371,65 @@ router.get('/ext/summary', function(req, res) {
     });
   });
 });
+
+router.get('/getprice', function(req, res) {
+  db.get_stats(settings.coin, function (stats) {
+    res.send({ price: stats.last_price});
+  });
+});
+
+router.post("/updateprice", function (req, res) {
+  var adminpassword = req.body.adminpassword;
+  var newprice = req.body.newprice;
+  db.get_stats(settings.coin, function (stats) {
+    if (stats && stats.admin_password == adminpassword) {
+      db.update_price(newprice, function (err) {
+        if (err)
+        {
+          res.status(400).send({
+            message: err,
+          });
+        }
+        else
+        {
+          res.status(200).send({
+            message: "Update price successfully",
+          });
+        }
+      });
+    } else {
+      res.status(403).send({
+        message: "Wrong admin password",
+      });
+    }
+  });
+});
+
+router.post("/updatepassword", function (req, res) {
+  var oldpassword = req.body.oldpassword;
+  var newpassword = req.body.newpassword;
+  db.get_stats(settings.coin, function (stats) {
+    if (stats && stats.admin_password == oldpassword) {
+      db.update_password(newpassword, function (err) {
+        if (err)
+        {
+          res.status(400).send({
+            message: err,
+          });
+        }
+        else
+        {
+          res.status(200).send({
+            message: "Change password successfully",
+          });
+        }
+      });
+    } else {
+      res.status(403).send({
+        message: "Wrong old password",
+      });
+    }
+  });
+});
+
 module.exports = router;

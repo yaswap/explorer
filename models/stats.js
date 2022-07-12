@@ -11,6 +11,7 @@ var StatsSchema = new Schema({
   //last_txs: { type: Array, default: [] },
   connections: { type: Number, default: 0 },
   last_price: { type: Number, default: 0 },
+  admin_password: { type: String },
 });
 
 module.exports = mongoose.model('coinstats', StatsSchema);
