@@ -1,5 +1,8 @@
 #!/bin/bash
-cd /explorer
+. /home/yacmine/.nvm/nvm.sh
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+nvm use
 npm start &
 mempool_sleep=5
 update_block_sleep=60
