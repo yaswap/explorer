@@ -6,7 +6,10 @@ var express = require('express')
     , lib = require('../lib/explorer')
     , mongoose = require('mongoose')
     , Stats = require('../models/stats')
-    , qr = require('qr-image');
+    , qr = require('qr-image')
+    , statik = require('node-static');
+
+var fileServer = new statik.Server('./public');
 
 function route_get_block(res, blockhash) {
   lib.get_block(blockhash, function (block) {
@@ -139,6 +142,14 @@ router.get('/', function(req, res) {
 
 router.get('/info', function(req, res) {
   res.render('info', { active: 'info', address: settings.address, hashes: settings.api });
+});
+
+router.get('/wallet_download', function(req, res) {
+  res.render('wallet_download', { active: 'wallet_download' });
+});
+
+router.get('/yaswap_wallet', function(req, res) {
+  fileServer.serveFile('/Yaswap_wallet.zip', 200, {}, req, res);
 });
 
 router.get('/markets/:market', function(req, res) {

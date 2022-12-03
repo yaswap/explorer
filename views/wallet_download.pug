@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  .col-md-12(style="margin-bottom: 4%")
+    .card.card-default
+      .card-header
+        strong #{settings.locale.wallet_title}
+      .card-body
+        span In order to use crosschain swap dapp at
+        a(href='https://yaswap.yacoin.org/yaswap_mainnet/')  https://yaswap.yacoin.org/yaswap_mainnet/
+        span , you need to download yaswap wallet. Please click
+        a(href='/yaswap_wallet')  here
+        span  to download
+        br
+        p #{settings.locale.wallet_introduction}
+        br
+        strong Wallet installation instructions:
+        p 1) Unzip yaswap_wallet
+        p 2) In the Chrome Browser, go to Settings>>Extensions
+        p 3) Enable Developer Mode (toggle in upper right corner)
+        p 4) Click load unpacked (upper left corner). Select folder "Yaswap wallet" that you unzipped (the whole folder)
+        p 5) Select the extension icon in the upper right of the chrome browser to access the extension "YASwap", and follow instructions to obtain your seeds words and create a password.
+    
+    .footer-padding

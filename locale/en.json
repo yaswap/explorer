@@ -14,6 +14,7 @@
     "menu_movement": "Movement",
     "menu_node": "Nodes",
     "menu_network": "Network",
+    "menu_wallet_download": "Wallet Download",
 
     // explorer view
     "ex_title": "Block Explorer",
@@ -158,4 +159,8 @@
     // Timelock
     "ex_duplicate_redeemscript": "The redeemscript already exists",
 	"ex_redeemscript_error": "The redeemscript is invalid",
+
+    // Wallet download
+    "wallet_title": "Wallet download",
+    "wallet_introduction": "It also supports the execution of atomic swaps within the wallet itself.",
 }

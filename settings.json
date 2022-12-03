@@ -70,6 +70,7 @@
     "markets": false,
     "richlist": true,
     "timelock": true,
+    "wallet_download": true,
     "twitter": true,
     "facebook": false,
     "googleplus": false,

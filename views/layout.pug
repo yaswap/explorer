@@ -157,6 +157,11 @@ html
               a.nav-link(href='/timelock')
                 span.fa.fa-btc
                 span.menu-text #{settings.locale.menu_timelock}
+          if settings.display.wallet_download == true
+            li#timelock
+              a.nav-link(href='/wallet_download')
+                span.fa.fa-btc
+                span.menu-text #{settings.locale.menu_wallet_download}
           if settings.display.markets == true
             li#markets
               a.nav-link.loading(href='/markets/'+settings.markets.default)
