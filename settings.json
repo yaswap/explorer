@@ -25,14 +25,14 @@
 
   // Uses bootswatch themes (http://bootswatch.com/)
   // Valid options:
-  //     Cerulean, Cosmo, Cyborg, Darkly, Flatly, Journal, Litera, Lumen, 
-  //     Lux, Materia, Minty, Pulse, Sandstone, Simplex, Sketchy, Slate, 
+  //     Cerulean, Cosmo, Cyborg, Darkly, Flatly, Journal, Litera, Lumen,
+  //     Lux, Materia, Minty, Pulse, Sandstone, Simplex, Sketchy, Slate,
   //     Solar, Spacelab, Superhero, United, Yeti
   // theme (see /public/themes for available themes)
   "theme": "Yeti",
 
   // port to listen for requests on.
-  "port" : 3001,
+  "port": 3001,
 
   // database settings (MongoDB)
   "dbsettings": {
@@ -110,7 +110,7 @@
     "coin": "YAC",
     "exchange": "USD",
     "enabled": [],
-    "ccex_key" : "Get-Your-Own-Key",
+    "ccex_key": "Get-Your-Own-Key",
     "default": ""
   },
 
@@ -176,7 +176,11 @@
   // type (optional) = class of label, valid types: default, primary, warning, danger, success
   // url (optional) = url to link to for more information
   "labels": {
-    "YJCNjEEwuh2UdmHqLhuBj6xpcJRgz9xy7z": {"label": "Operator address [YAC]", "type":"primary", "url":"https://yacoin.org"},
-  //  "JSWVXHWeYNknPdG9uDrcBoZHztKMFCsndw": {"label": "Cryptsy"}
+    "YJCNjEEwuh2UdmHqLhuBj6xpcJRgz9xy7z": {
+      "label": "Operator address [YAC]",
+      "type": "primary",
+      "url": "https://yacoin.org"
+    }
+    //  "JSWVXHWeYNknPdG9uDrcBoZHztKMFCsndw": {"label": "Cryptsy"}
   }
 }
