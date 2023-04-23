@@ -20,4 +20,7 @@ var AddressUtxoSchema = new Schema({
 
 AddressUtxoSchema.index({ a_id: 1, isused: 1 });
 
-module.exports = mongoose.model('AddressUtxo', AddressUtxoSchema);
+module.exports = {
+  TimelockUtxoInfo: mongoose.model('TimelockUtxoInfo', TimelockUtxoInfoSchema),
+  AddressUtxo: mongoose.model('AddressUtxo', AddressUtxoSchema),
+};
