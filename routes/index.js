@@ -333,7 +333,7 @@ router.post('/timelock', function (req, res) {
     } else {
       lib.describe_redeemscript(redeemscript, function (describeinfo) {
         if (describeinfo != 'There was an error. Check your console.') {
-          db.add_timelock(describeinfo, function (err) {
+          db.add_P2SH_timelock(describeinfo, function (err) {
             if (err) {
               route_get_index(res, err);
             } else {

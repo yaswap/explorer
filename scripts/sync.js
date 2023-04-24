@@ -198,7 +198,7 @@ is_locked(function (exists) {
                                       var i = loop.iteration();
                                       lib.describe_redeemscript(timelock[i].redeemscript, function (describeinfo) {
                                         if (describeinfo != 'There was an error. Check your console.') {
-                                          db.add_timelock(describeinfo, function (err) {
+                                          db.add_P2SH_timelock(describeinfo, function (err) {
                                             loop.next();
                                           });
                                         } else {
