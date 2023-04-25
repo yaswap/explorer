@@ -6,7 +6,6 @@ var mongoose = require('mongoose'),
   Richlist = require('../models/richlist'),
   Stats = require('../models/stats'),
   TimeLock = require('../models/timelock'),
-  CsvInfo = require('../models/csvinfo'),
   settings = require('../lib/settings'),
   lib = require('../lib/explorer'),
   fs = require('fs');
@@ -172,62 +171,59 @@ is_locked(function (exists) {
                         TimeLock.find({}, 'redeemscript').exec(function (err, timelock) {
                           TimeLock.deleteMany({}, function (err4) {
                             console.log('Timelock cleared.');
-                            CsvInfo.deleteMany({}, function (err5) {
-                              console.log('CsvInfo cleared.');
-                              Richlist.updateOne(
-                                { coin: settings.coin },
-                                {
-                                  received: [],
-                                  balance: [],
-                                },
-                                function (err3) {
-                                  Stats.updateOne(
-                                    { coin: settings.coin },
-                                    {
-                                      last: 0,
-                                      count: 0,
-                                      supply: 0,
-                                    },
-                                    function () {
-                                      console.log('index cleared (reindex)');
-                                    }
-                                  );
-                                  lib.syncLoop(
-                                    timelock.length,
-                                    function (loop) {
-                                      var i = loop.iteration();
-                                      lib.describe_redeemscript(timelock[i].redeemscript, function (describeinfo) {
-                                        if (describeinfo != 'There was an error. Check your console.') {
-                                          db.add_P2SH_timelock(describeinfo, function (err) {
-                                            loop.next();
-                                          });
-                                        } else {
+                            Richlist.updateOne(
+                              { coin: settings.coin },
+                              {
+                                received: [],
+                                balance: [],
+                              },
+                              function (err3) {
+                                Stats.updateOne(
+                                  { coin: settings.coin },
+                                  {
+                                    last: 0,
+                                    count: 0,
+                                    supply: 0,
+                                  },
+                                  function () {
+                                    console.log('index cleared (reindex)');
+                                  }
+                                );
+                                lib.syncLoop(
+                                  timelock.length,
+                                  function (loop) {
+                                    var i = loop.iteration();
+                                    lib.describe_redeemscript(timelock[i].redeemscript, function (describeinfo) {
+                                      if (describeinfo != 'There was an error. Check your console.') {
+                                        db.add_P2SH_timelock(describeinfo, function (err) {
                                           loop.next();
-                                        }
-                                      });
-                                    },
-                                    function () {
-                                      db.update_tx_db(
-                                        settings.coin,
-                                        1,
-                                        stats.count,
-                                        settings.update_timeout,
-                                        function () {
-                                          db.update_richlist('received', function () {
-                                            db.update_richlist('balance', function () {
-                                              db.get_stats(settings.coin, function (nstats) {
-                                                console.log('reindex complete (block: %s)', nstats.last);
-                                                exit();
-                                              });
+                                        });
+                                      } else {
+                                        loop.next();
+                                      }
+                                    });
+                                  },
+                                  function () {
+                                    db.update_tx_db(
+                                      settings.coin,
+                                      1,
+                                      stats.count,
+                                      settings.update_timeout,
+                                      function () {
+                                        db.update_richlist('received', function () {
+                                          db.update_richlist('balance', function () {
+                                            db.get_stats(settings.coin, function (nstats) {
+                                              console.log('reindex complete (block: %s)', nstats.last);
+                                              exit();
                                             });
                                           });
-                                        }
-                                      );
-                                    }
-                                  );
-                                }
-                              );
-                            });
+                                        });
+                                      }
+                                    );
+                                  }
+                                );
+                              }
+                            );
                           });
                         });
                       });

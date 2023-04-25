@@ -4,12 +4,13 @@ var mongoose = require('mongoose'),
 var TxSchema = new Schema(
   {
     txid: { type: String, lowercase: true, unique: true, index: true },
-    vin: { type: Array, default: [] }, // array of {vin_address, sent_amount}
-    vout: { type: Array, default: [] }, // array of {vout_address, received_amount}
+    vin: { type: Array, default: [] }, // array of {vin_address, sent_amount, prevTxid, prevVout}
+    vout: { type: Array, default: [] }, // array of {vout_address, received_amount, timelockUtxoInfo}
     total: { type: Number, default: 0, index: true }, // total value of vout
     timestamp: { type: Number, default: 0, index: true },
     blockhash: { type: String, index: true },
     blockindex: { type: Number, default: 0, index: true },
+    blocktime: { type: Number, default: 0, index: true },
   },
   { id: false }
 );
