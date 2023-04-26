@@ -10,9 +10,8 @@
         th(style='text-align:center;') 
           span.fa.fa-flag-checkered
         th #{settings.locale.tx_address}
-        th.hidden-xs #{settings.locale.rl_balance} (#{settings.symbol})
+        th.hidden-xs #{settings.locale.tl_timelocked_amount} (#{settings.symbol})
         th.hidden-xs Locktime info
-        th.hidden-xs Raw redeemscript
     tbody
       - var count = 0
       each item in timelocklist
@@ -29,8 +28,10 @@
             span.decimal #{itemFixedParts[1]}
           td.hidden-xs
             =item.description
-            if item.type === 'CSV_P2SH_timelock' || item.type.includes("P2PKH_timelock")
-              p Below table list maximum 10 nearest timestamps which an amount of coins will be unlocked. If that amount of coins was unlocked but they haven't been used, it would also be listed in the table.
+            if item.type.includes("P2SH_timelock")
+              p This P2SH address has redeemscript = #{item.redeemscript}
+            if item.type.includes("CSV_P2SH_timelock") || item.type.includes("P2PKH_timelock")
+              p Below table list maximum 10 UTXOs with biggest amount of timelocked coins. If the UTXO was unlocked but it hasn't been used, it would also be listed in the table.
               table.table.table-hover.table-bordered(cellspacing="0")
                 thead
                   tr
@@ -50,7 +51,5 @@
                         =utxo.timetouse_string
                       td.hidden-xs #{amountFixedParts[0]}.
                         span.decimal #{amountFixedParts[1]}
-          td.hidden-xs
-            =item.redeemscript
 
 

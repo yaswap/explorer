@@ -159,6 +159,7 @@
   // Timelock
   "ex_duplicate_redeemscript": "The redeemscript already exists",
   "ex_redeemscript_error": "The redeemscript is invalid",
+  "tl_timelocked_amount": "Timelocked coins amount",
 
   // Wallet download
   "wallet_title": "Wallet download",
