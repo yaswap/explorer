@@ -217,18 +217,17 @@ router.get('/richlist', function (req, res) {
   }
 });
 
-router.get('/timelock', function (req, res) {
+router.get('/timelock', async function (req, res) {
   if (settings.display.timelock == true) {
-    db.get_timelocklist(function (timelocklist) {
-      if (timelocklist) {
-        res.render('timelock', {
-          active: 'timelock',
-          timelocklist: timelocklist,
-        });
-      } else {
-        route_get_index(res, null);
-      }
-    });
+    timelockinfo = await db.get_timelockinfo();
+    if (timelockinfo) {
+      res.render('timelock', {
+        active: 'timelock',
+        timelocklist: timelockinfo,
+      });
+    } else {
+      route_get_index(res, null);
+    }
   } else {
     route_get_index(res, null);
   }

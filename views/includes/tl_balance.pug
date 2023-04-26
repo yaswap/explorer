@@ -23,13 +23,13 @@
           td(style='text-align:center;') 
             =count
           td 
-            a(href='/address/'+item.a_id) #{item.a_id}
+            a(href='/address/'+item.address) #{item.address}
             include ./rl_labels.pug
           td.hidden-xs #{itemFixedParts[0]}.
             span.decimal #{itemFixedParts[1]}
           td.hidden-xs
             =item.description
-            if !item.iscltv && item.csvinfo.length
+            if item.type === 'CSV_P2SH_timelock' || item.type.includes("P2PKH_timelock")
               p Below table list maximum 10 nearest timestamps which an amount of coins will be unlocked. If that amount of coins was unlocked but they haven't been used, it would also be listed in the table.
               table.table.table-hover.table-bordered(cellspacing="0")
                 thead
@@ -39,7 +39,7 @@
                     th.hidden-xs Amount
                 tbody
                   - var i = 0
-                  each utxo in item.csvinfo
+                  each utxo in item.utxos
                     - i = i + 1
                     - var amountFixed = (parseInt(utxo.amount) / 1000000)
                     - var amountFixedParts = amountFixed.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
