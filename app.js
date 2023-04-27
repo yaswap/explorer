@@ -93,6 +93,10 @@ app.use('/api/address/:address/utxo', function (req, res) {
       var return_info = [];
       if (found) {
         for (var i = 0; i < utxo_mempool.length; i++) {
+          // Exclude the timelocked UTXO wasn't expired because it can't be used at the moment
+          if (utxo_mempool[i].timelockinfo !== null && !utxo_mempool[i].timelockinfo.isexpired) {
+            continue;
+          }
           info = {
             txid: utxo_mempool[i].txid,
             vout: utxo_mempool[i].vout,
@@ -113,21 +117,26 @@ app.use('/api/address/:address/utxo', function (req, res) {
               // Update balance and transaction of addresses used as vin
               var i = loop.iteration();
 
-              db.get_tx(utxo[i].txid, function (tx) {
-                info = {
-                  txid: utxo[i].txid,
-                  vout: utxo[i].vout,
-                  value: utxo[i].amount,
-                  status: {
-                    confirmed: true,
-                    block_height: tx.blockindex,
-                    block_hash: tx.blockhash,
-                    block_time: tx.timestamp,
-                  },
-                };
-                return_info.push(info);
+              // Exclude the timelocked UTXO wasn't expired because it can't be used at the moment
+              if (utxo[i].timelockinfo === null || utxo[i].timelockinfo.isexpired) {
+                db.get_tx(utxo[i].txid, function (tx) {
+                  info = {
+                    txid: utxo[i].txid,
+                    vout: utxo[i].vout,
+                    value: utxo[i].amount,
+                    status: {
+                      confirmed: true,
+                      block_height: tx.blockindex,
+                      block_hash: tx.blockhash,
+                      block_time: tx.timestamp,
+                    },
+                  };
+                  return_info.push(info);
+                  loop.next();
+                });
+              } else {
                 loop.next();
-              });
+              }
             },
             function () {
               res.send(return_info);

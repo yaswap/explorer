@@ -10,28 +10,33 @@
         th(style='text-align:center;') 
           span.fa.fa-flag-checkered
         th #{settings.locale.tx_address}
+        th.hidden-xs #{settings.locale.rl_balance} (#{settings.symbol})
         th.hidden-xs #{settings.locale.tl_timelocked_amount} (#{settings.symbol})
         th.hidden-xs Locktime info
     tbody
       - var count = 0
       each item in timelocklist
         - count = count + 1
-        - var itemFixed = (parseInt(item.balance) / 1000000)
-        - var itemFixedParts = itemFixed.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
+        - var tlBalance = (parseInt(item.timelockedbalance) / 1000000)
+        - var tlBalanceParts = tlBalance.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
+        - var balance = (parseInt(item.balance) / 1000000)
+        - var balanceParts = balance.toLocaleString('en',{'minimumFractionDigits':2,'maximumFractionDigits':8,'useGrouping':true}).split(".");
         tr
           td(style='text-align:center;') 
             =count
           td 
             a(href='/address/'+item.address) #{item.address}
             include ./rl_labels.pug
-          td.hidden-xs #{itemFixedParts[0]}.
-            span.decimal #{itemFixedParts[1]}
+          td.hidden-xs #{balanceParts[0]}.
+            span.decimal #{balanceParts[1]}
+          td.hidden-xs #{tlBalanceParts[0]}.
+            span.decimal #{tlBalanceParts[1]}
           td.hidden-xs
             =item.description
             if item.type.includes("P2SH_timelock")
               p This P2SH address has redeemscript = #{item.redeemscript}
             if item.type.includes("CSV_P2SH_timelock") || item.type.includes("P2PKH_timelock")
-              p Below table list maximum 10 UTXOs with biggest amount of timelocked coins. If the UTXO was unlocked but it hasn't been used, it would also be listed in the table.
+              p Below table list maximum 10 UTXOs with biggest amount of timelocked coins. If the timelock is expired, the UTXO won't be listed in the table.
               table.table.table-hover.table-bordered(cellspacing="0")
                 thead
                   tr

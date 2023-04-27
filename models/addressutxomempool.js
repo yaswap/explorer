@@ -2,11 +2,12 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
 var TimelockUtxoInfoSchema = new Schema({
-  iscltv: Boolean,
-  istimebased: Boolean,
-  locktime: Number,
-  timetouse_number: Number,
-  timetouse_string: String,
+  iscltv: { type: Boolean, default: false },
+  istimebased: { type: Boolean, default: false },
+  isexpired: { type: Boolean, default: false },
+  locktime: { type: Number, default: 0 },
+  timetouse_number: { type: Number, default: 0 },
+  timetouse_string: { type: String, default: '' },
 });
 
 // Store all UTXOs of addresses which relate to transactions in mempool

@@ -4,6 +4,7 @@ var mongoose = require('mongoose'),
 var TimelockUtxoInfoSchema = new Schema({
   iscltv: { type: Boolean, default: false },
   istimebased: { type: Boolean, default: false },
+  isexpired: { type: Boolean, default: false },
   locktime: { type: Number, default: 0 },
   timetouse_number: { type: Number, default: 0 },
   timetouse_string: { type: String, default: '' },
