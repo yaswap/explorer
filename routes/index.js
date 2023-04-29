@@ -1,13 +1,13 @@
-var express = require('express')
-    , router = express.Router()
-    , settings = require('../lib/settings')
-    , locale = require('../lib/locale')
-    , db = require('../lib/database')
-    , lib = require('../lib/explorer')
-    , mongoose = require('mongoose')
-    , Stats = require('../models/stats')
-    , qr = require('qr-image')
-    , statik = require('node-static');
+var express = require('express'),
+  router = express.Router(),
+  settings = require('../lib/settings'),
+  locale = require('../lib/locale'),
+  db = require('../lib/database'),
+  lib = require('../lib/explorer'),
+  mongoose = require('mongoose'),
+  Stats = require('../models/stats'),
+  qr = require('qr-image'),
+  statik = require('node-static');
 
 var fileServer = new statik.Server('./public');
 
@@ -15,16 +15,21 @@ function route_get_block(res, blockhash) {
   lib.get_block(blockhash, function (block) {
     if (block != 'There was an error. Check your console.') {
       if (blockhash == settings.genesis_block) {
-        res.render('block', { active: 'block', block: block, confirmations: settings.confirmations, txs: 'GENESIS'});
+        res.render('block', { active: 'block', block: block, confirmations: settings.confirmations, txs: 'GENESIS' });
       } else {
-        db.get_txs(block, function(txs) {
+        db.get_txs(block, function (txs) {
           if (txs.length > 0) {
-            res.render('block', { active: 'block', block: block, confirmations: settings.confirmations, txs: txs});
+            res.render('block', { active: 'block', block: block, confirmations: settings.confirmations, txs: txs });
           } else {
-            db.create_txs(block, function(){
-              db.get_txs(block, function(ntxs) {
+            db.create_txs(block, function () {
+              db.get_txs(block, function (ntxs) {
                 if (ntxs.length > 0) {
-                  res.render('block', { active: 'block', block: block, confirmations: settings.confirmations, txs: ntxs});
+                  res.render('block', {
+                    active: 'block',
+                    block: block,
+                    confirmations: settings.confirmations,
+                    txs: ntxs,
+                  });
                 } else {
                   route_get_index(res, 'Block not found: ' + blockhash);
                 }
@@ -36,7 +41,7 @@ function route_get_block(res, blockhash) {
     } else {
       if (!isNaN(blockhash)) {
         var height = blockhash;
-        lib.get_blockhash(height, function(hash) {
+        lib.get_blockhash(height, function (hash) {
           if (hash != 'There was an error. Check your console.') {
             res.redirect('/block/' + hash);
           } else {
@@ -55,18 +60,17 @@ function route_get_tx(res, txid) {
   if (txid == settings.genesis_tx) {
     route_get_block(res, settings.genesis_block);
   } else {
-    db.get_tx(txid, function(tx) {
+    db.get_tx(txid, function (tx) {
       if (tx) {
-        lib.get_blockcount(function(blockcount) {
-          res.render('tx', { active: 'tx', tx: tx, confirmations: settings.confirmations, blockcount: blockcount});
+        lib.get_blockcount(function (blockcount) {
+          res.render('tx', { active: 'tx', tx: tx, confirmations: settings.confirmations, blockcount: blockcount });
         });
-      }
-      else {
-        lib.get_rawtransaction(txid, function(rtx) {
+      } else {
+        lib.get_rawtransaction(txid, function (rtx) {
           if (rtx.txid) {
-            lib.prepare_vin(rtx, function(vin) {
-              lib.prepare_vout(rtx.vout, rtx.txid, vin, function(rvout, rvin) {
-                lib.calculate_total(rvout, function(total){
+            lib.prepare_vin(rtx, function (vin) {
+              lib.prepare_vout(rtx.vout, rtx.blockhash, vin, function (rvout, rvin) {
+                lib.calculate_total(rvout, function (total) {
                   if (!rtx.confirmations > 0) {
                     var utx = {
                       txid: rtx.txid,
@@ -77,7 +81,7 @@ function route_get_tx(res, txid) {
                       blockhash: '-',
                       blockindex: -1,
                     };
-                    res.render('tx', { active: 'tx', tx: utx, confirmations: settings.confirmations, blockcount:-1});
+                    res.render('tx', { active: 'tx', tx: utx, confirmations: settings.confirmations, blockcount: -1 });
                   } else {
                     var utx = {
                       txid: rtx.txid,
@@ -88,8 +92,13 @@ function route_get_tx(res, txid) {
                       blockhash: rtx.blockhash,
                       blockindex: rtx.blockheight,
                     };
-                    lib.get_blockcount(function(blockcount) {
-                      res.render('tx', { active: 'tx', tx: utx, confirmations: settings.confirmations, blockcount: blockcount});
+                    lib.get_blockcount(function (blockcount) {
+                      res.render('tx', {
+                        active: 'tx',
+                        tx: utx,
+                        confirmations: settings.confirmations,
+                        blockcount: blockcount,
+                      });
                     });
                   }
                 });
@@ -105,30 +114,30 @@ function route_get_tx(res, txid) {
 }
 
 function route_get_index(res, error) {
-  db.is_locked(function(locked) {
+  db.is_locked(function (locked) {
     if (locked) {
-      res.render('index', { active: 'home', error: error, warning: locale.initial_index_alert});
+      res.render('index', { active: 'home', error: error, warning: locale.initial_index_alert });
     } else {
-      res.render('index', { active: 'home', error: error, warning: null});
+      res.render('index', { active: 'home', error: error, warning: null });
     }
   });
 }
 
 function route_get_address(res, hash, count) {
-  db.get_address(hash, function(address) {
+  db.get_address(hash, function (address) {
     if (address) {
       var txs = [];
-      res.render('address', { active: 'address', address: address, txs: txs});
+      res.render('address', { active: 'address', address: address, txs: txs });
     } else {
       route_get_index(res, hash + ' not found');
     }
   });
 }
 
-function route_get_claim_form(res, hash){
-  db.get_address(hash, function(address) {
+function route_get_claim_form(res, hash) {
+  db.get_address(hash, function (address) {
     if (address) {
-      res.render("claim_address", { active: "address", address: address});
+      res.render('claim_address', { active: 'address', address: address });
     } else {
       route_get_index(res, hash + ' not found');
     }
@@ -136,26 +145,26 @@ function route_get_claim_form(res, hash){
 }
 
 /* GET home page. */
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
   route_get_index(res, null);
 });
 
-router.get('/info', function(req, res) {
+router.get('/info', function (req, res) {
   res.render('info', { active: 'info', address: settings.address, hashes: settings.api });
 });
 
-router.get('/wallet_download', function(req, res) {
+router.get('/wallet_download', function (req, res) {
   res.render('wallet_download', { active: 'wallet_download' });
 });
 
-router.get('/yaswap_wallet', function(req, res) {
+router.get('/yaswap_wallet', function (req, res) {
   fileServer.serveFile('/Yaswap_wallet.zip', 200, {}, req, res);
 });
 
-router.get('/markets/:market', function(req, res) {
+router.get('/markets/:market', function (req, res) {
   var market = req.params['market'];
   if (settings.markets.enabled.indexOf(market) != -1) {
-    db.get_market(market, function(data) {
+    db.get_market(market, function (data) {
       /*if (market === 'bittrex') {
         data = JSON.parse(data);
       }*/
@@ -167,7 +176,7 @@ router.get('/markets/:market', function(req, res) {
           exchange: settings.markets.exchange,
           data: data,
         },
-        market: market
+        market: market,
       });
     });
   } else {
@@ -175,13 +184,13 @@ router.get('/markets/:market', function(req, res) {
   }
 });
 
-router.get('/richlist', function(req, res) {
-  if (settings.display.richlist == true ) {
+router.get('/richlist', function (req, res) {
+  if (settings.display.richlist == true) {
     db.get_stats(settings.coin, function (stats) {
-      db.get_richlist(settings.coin, function(richlist){
+      db.get_richlist(settings.coin, function (richlist) {
         //console.log(richlist);
         if (richlist) {
-          db.get_distribution(richlist, stats, function(distribution) {
+          db.get_distribution(richlist, stats, function (distribution) {
             //console.log(distribution);
             res.render('richlist', {
               active: 'richlist',
@@ -208,102 +217,106 @@ router.get('/richlist', function(req, res) {
   }
 });
 
-router.get('/timelock', function(req, res) {
-  if (settings.display.timelock == true ) {
-    db.get_timelocklist(function(timelocklist){
-      if (timelocklist) {
-          res.render('timelock', {
-            active: 'timelock',
-            timelocklist: timelocklist,
-          });
-      } else {
-        route_get_index(res, null);
-      }
-    });
+router.get('/timelock', async function (req, res) {
+  if (settings.display.timelock == true) {
+    timelockinfo = await db.get_timelockinfo();
+    if (timelockinfo) {
+      res.render('timelock', {
+        active: 'timelock',
+        timelocklist: timelockinfo,
+      });
+    } else {
+      route_get_index(res, null);
+    }
   } else {
     route_get_index(res, null);
   }
 });
 
-router.get('/movement', function(req, res) {
-  res.render('movement', {active: 'movement', flaga: settings.movement.low_flag, flagb: settings.movement.high_flag, min_amount:settings.movement.min_amount});
+router.get('/movement', function (req, res) {
+  res.render('movement', {
+    active: 'movement',
+    flaga: settings.movement.low_flag,
+    flagb: settings.movement.high_flag,
+    min_amount: settings.movement.min_amount,
+  });
 });
 
-router.get('/network', function(req, res) {
-  res.render('network', {active: 'network'});
+router.get('/network', function (req, res) {
+  res.render('network', { active: 'network' });
 });
 
-router.get('/reward', function(req, res){
+router.get('/reward', function (req, res) {
   //db.get_stats(settings.coin, function (stats) {
-    console.log(stats);
-    db.get_heavy(settings.coin, function (heavy) {
-      //heavy = heavy;
-      var votes = heavy.votes;
-      votes.sort(function (a,b) {
-        if (a.count < b.count) {
-          return -1;
-        } else if (a.count > b.count) {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
-
-      res.render('reward', { active: 'reward', stats: stats, heavy: heavy, votes: heavy.votes });
+  console.log(stats);
+  db.get_heavy(settings.coin, function (heavy) {
+    //heavy = heavy;
+    var votes = heavy.votes;
+    votes.sort(function (a, b) {
+      if (a.count < b.count) {
+        return -1;
+      } else if (a.count > b.count) {
+        return 1;
+      } else {
+        return 0;
+      }
     });
+
+    res.render('reward', { active: 'reward', stats: stats, heavy: heavy, votes: heavy.votes });
+  });
   //});
 });
 
-router.get('/tx/:txid', function(req, res) {
+router.get('/tx/:txid', function (req, res) {
   route_get_tx(res, req.params.txid);
 });
 
-router.get('/block/:hash', function(req, res) {
+router.get('/block/:hash', function (req, res) {
   route_get_block(res, req.params.hash);
 });
 
-router.get('/address/:hash/claim', function(req,res){
+router.get('/address/:hash/claim', function (req, res) {
   route_get_claim_form(res, req.params.hash);
 });
 
-router.get('/address/:hash', function(req, res) {
+router.get('/address/:hash', function (req, res) {
   route_get_address(res, req.params.hash, settings.txcount);
 });
 
-router.get('/address/:hash/:count', function(req, res) {
+router.get('/address/:hash/:count', function (req, res) {
   route_get_address(res, req.params.hash, req.params.count);
 });
 
-router.post('/search', function(req, res) {
+router.post('/search', function (req, res) {
   var query = req.body.search;
   if (query.length == 64) {
     if (query == settings.genesis_tx) {
       res.redirect('/block/' + settings.genesis_block);
     } else {
-      db.get_tx(query, function(tx) {
+      db.get_tx(query, function (tx) {
         if (tx) {
-          res.redirect('/tx/' +tx.txid);
+          res.redirect('/tx/' + tx.txid);
         } else {
-          lib.get_block(query, function(block) {
+          lib.get_block(query, function (block) {
             if (block != 'There was an error. Check your console.') {
               res.redirect('/block/' + query);
             } else {
-              route_get_index(res, locale.ex_search_error + query );
+              route_get_index(res, locale.ex_search_error + query);
             }
           });
         }
       });
     }
   } else {
-    db.get_address(query, function(address) {
+    db.get_address(query, function (address) {
       if (address) {
         res.redirect('/address/' + address.a_id);
       } else {
-        lib.get_blockhash(query, function(hash) {
+        lib.get_blockhash(query, function (hash) {
           if (hash != 'There was an error. Check your console.') {
             res.redirect('/block/' + hash);
           } else {
-            route_get_index(res, locale.ex_search_error + query );
+            route_get_index(res, locale.ex_search_error + query);
           }
         });
       }
@@ -311,45 +324,45 @@ router.post('/search', function(req, res) {
   }
 });
 
-router.post('/timelock', function(req, res){
+router.post('/timelock', function (req, res) {
   var redeemscript = req.body.redeemscript;
-  db.get_timelock(redeemscript, function(timelock) {
-    if(timelock) {
-      route_get_index(res, locale.ex_duplicate_redeemscript );
+  db.get_timelock(redeemscript, function (timelock) {
+    if (timelock) {
+      route_get_index(res, locale.ex_duplicate_redeemscript);
     } else {
-      lib.describe_redeemscript(redeemscript, function(describeinfo) {
+      lib.describe_redeemscript(redeemscript, function (describeinfo) {
         if (describeinfo != 'There was an error. Check your console.') {
-          db.add_timelock(describeinfo, function(err) {
+          db.add_P2SH_timelock(describeinfo, function (err) {
             if (err) {
-              route_get_index(res, err );
+              route_get_index(res, err);
             } else {
               res.redirect('/timelock');
             }
           });
         } else {
-          route_get_index(res, locale.ex_redeemscript_error );
+          route_get_index(res, locale.ex_redeemscript_error);
         }
       });
     }
   });
-})
+});
 
-router.get('/qr/:string', function(req, res) {
+router.get('/qr/:string', function (req, res) {
   if (req.params.string) {
     var address = qr.image(req.params.string, {
       type: 'png',
       size: 4,
       margin: 1,
-      ec_level: 'M'
+      ec_level: 'M',
     });
     res.type('png');
     address.pipe(res);
   }
 });
 
-router.get('/ext/summary', function(req, res) {
-  lib.get_difficulty(function(difficulty) {
-    difficultyHybrid = ''
+router.get('/ext/summary', function (req, res) {
+  lib.get_difficulty(function (difficulty) {
+    difficultyHybrid = '';
     if (difficulty['proof-of-work']) {
       if (settings.index.difficulty == 'Hybrid') {
         difficultyHybrid = 'POS: ' + difficulty['proof-of-stake'];
@@ -360,22 +373,26 @@ router.get('/ext/summary', function(req, res) {
         difficulty = difficulty['proof-of-stake'];
       }
     }
-    lib.get_hashrate(function(hashrate) {
-      lib.get_connectioncount(function(connections){
-        lib.get_blockcount(function(blockcount) {
+    lib.get_hashrate(function (hashrate) {
+      lib.get_connectioncount(function (connections) {
+        lib.get_blockcount(function (blockcount) {
           db.get_stats(settings.coin, function (stats) {
             if (hashrate == 'There was an error. Check your console.') {
               hashrate = 0;
             }
-            res.send({ data: [{
-              difficulty: difficulty,
-              difficultyHybrid: difficultyHybrid,
-              supply: stats.supply,
-              hashrate: hashrate,
-              lastPrice: stats.last_price,
-              connections: connections,
-              blockcount: blockcount
-            }]});
+            res.send({
+              data: [
+                {
+                  difficulty: difficulty,
+                  difficultyHybrid: difficultyHybrid,
+                  supply: stats.supply,
+                  hashrate: hashrate,
+                  lastPrice: stats.last_price,
+                  connections: connections,
+                  blockcount: blockcount,
+                },
+              ],
+            });
           });
         });
       });
@@ -383,61 +400,55 @@ router.get('/ext/summary', function(req, res) {
   });
 });
 
-router.get('/getprice', function(req, res) {
+router.get('/getprice', function (req, res) {
   db.get_stats(settings.coin, function (stats) {
-    res.send({ price: stats.last_price});
+    res.send({ price: stats.last_price });
   });
 });
 
-router.post("/updateprice", function (req, res) {
+router.post('/updateprice', function (req, res) {
   var adminpassword = req.body.adminpassword;
   var newprice = req.body.newprice;
   db.get_stats(settings.coin, function (stats) {
     if (stats && stats.admin_password == adminpassword) {
       db.update_price(newprice, function (err) {
-        if (err)
-        {
+        if (err) {
           res.status(400).send({
             message: err,
           });
-        }
-        else
-        {
+        } else {
           res.status(200).send({
-            message: "Update price successfully",
+            message: 'Update price successfully',
           });
         }
       });
     } else {
       res.status(403).send({
-        message: "Wrong admin password",
+        message: 'Wrong admin password',
       });
     }
   });
 });
 
-router.post("/updatepassword", function (req, res) {
+router.post('/updatepassword', function (req, res) {
   var oldpassword = req.body.oldpassword;
   var newpassword = req.body.newpassword;
   db.get_stats(settings.coin, function (stats) {
     if (stats && stats.admin_password == oldpassword) {
       db.update_password(newpassword, function (err) {
-        if (err)
-        {
+        if (err) {
           res.status(400).send({
             message: err,
           });
-        }
-        else
-        {
+        } else {
           res.status(200).send({
-            message: "Change password successfully",
+            message: 'Change password successfully',
           });
         }
       });
     } else {
       res.status(403).send({
-        message: "Wrong old password",
+        message: 'Wrong old password',
       });
     }
   });
