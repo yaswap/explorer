@@ -87,10 +87,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes
-app.use('/api/address/:address/utxo', function (req, res) {
-  lib.get_blockcount(function (blockheight) {
-    db.get_utxo_mempool(blockheight, req.params.address, function (found, utxo_mempool) {
-      var return_info = [];
+async function getAddressUtxo(address, blockheight) {
+  return new Promise((resolve, reject) => {
+    db.get_utxo_mempool(blockheight, address, function (found, utxo_mempool) {
+      var utxo_info = [];
       if (found) {
         for (var i = 0; i < utxo_mempool.length; i++) {
           // Exclude the timelocked UTXO wasn't expired because it can't be used at the moment
@@ -106,11 +106,11 @@ app.use('/api/address/:address/utxo', function (req, res) {
               block_height: utxo_mempool[i].blockutxoheight,
             },
           };
-          return_info.push(info);
+          utxo_info.push(info);
         }
-        res.send(return_info);
+        resolve(utxo_info);
       } else {
-        db.get_utxo(req.params.address, function (utxo) {
+        db.get_utxo(address, function (utxo) {
           lib.syncLoop(
             utxo.length,
             function (loop) {
@@ -131,7 +131,7 @@ app.use('/api/address/:address/utxo', function (req, res) {
                       block_time: tx.timestamp,
                     },
                   };
-                  return_info.push(info);
+                  utxo_info.push(info);
                   loop.next();
                 });
               } else {
@@ -139,40 +139,84 @@ app.use('/api/address/:address/utxo', function (req, res) {
               }
             },
             function () {
-              res.send(return_info);
+              resolve(utxo_info);
             }
           );
         });
       }
     });
   });
-});
+}
 
-app.use('/api/address/:address', function (req, res) {
-  lib.get_blockcount(function (blockheight) {
-    db.get_utxo_mempool_info(blockheight, req.params.address, function (utxo_mempool_info, new_txcount) {
+async function getAddressTxCounts(address, blockheight) {
+  return new Promise((resolve, reject) => {
+    db.get_utxo_mempool_info(blockheight, address, function (utxo_mempool_info, new_txcount) {
       if (utxo_mempool_info) {
-        db.get_txcount(req.params.address, function (txcount) {
+        db.get_txcount(address, function (txcount) {
           return_info = {
-            address: req.params.address,
+            address: address,
             ...utxo_mempool_info,
             tx_count: txcount + new_txcount,
           };
-          res.send(return_info);
+          resolve(return_info);
         });
       } else {
-        db.get_utxo_info(req.params.address, function (utxo_info) {
-          db.get_txcount(req.params.address, function (txcount) {
+        db.get_utxo_info(address, function (utxo_info) {
+          db.get_txcount(address, function (txcount) {
             return_info = {
-              address: req.params.address,
+              address: address,
               ...utxo_info,
               tx_count: txcount,
             };
-            res.send(return_info);
+            resolve(return_info);
           });
         });
       }
     });
+  });
+}
+
+app.use('/api/address/:address/utxo', function (req, res) {
+  lib.get_blockcount(async function (blockheight) {
+    const utxo = await getAddressUtxo(req.params.address, blockheight);
+    res.send(utxo);
+  });
+});
+
+app.post('/api/addresses/utxo', function (req, res) {
+  // req.body.addresses is a string array containing duplicate free addresses
+  lib.get_blockcount(async function (blockheight) {
+    const addresses = req.body.addresses;
+    // This is an array of { address, utxo } pairs
+    const utxos = await Promise.all(
+      addresses.map(async (addr) => {
+        const utxo = await getAddressUtxo(addr, blockheight);
+        return { address: addr, utxo };
+      })
+    );
+    res.send(utxos);
+  });
+});
+
+app.use('/api/address/:address', function (req, res) {
+  lib.get_blockcount(async function (blockheight) {
+    const data = await getAddressTxCounts(req.params.address, blockheight);
+    res.send(data);
+  });
+});
+
+app.post('/api/addresses', function (req, res) {
+  // req.body.addresses is a string array containing duplicate free addresses
+  lib.get_blockcount(async function (blockheight) {
+    const addresses = req.body.addresses;
+    // This is an array of object
+    // return_info = {
+    //   address: address,
+    //   ...utxo_info,
+    //   tx_count: txcount,
+    // };
+    const addresses_tx_counts = await Promise.all(addresses.map((addr) => getAddressTxCounts(addr, blockheight)));
+    res.send(addresses_tx_counts);
   });
 });
 
