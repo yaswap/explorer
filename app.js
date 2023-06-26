@@ -148,6 +148,144 @@ async function getAddressUtxo(address, blockheight) {
   });
 }
 
+async function getTokenUtxo(addresses) {
+  // Return object:
+  // [
+  //     {
+  //       "token_name": "BRINGBACKTHEYAK",
+  //       "balance": 2100000000,
+  //       "token_info": {
+  //        "token_type": "YA-token",
+  //        "amount": "2100.00",
+  //        "units": 2,
+  //        "reissuable": 0,
+  //        "block_hash": "00000bfd8796fd3cfbdd19bd5901ebeb0666548c95e70d180ac69e1b78af3e82",
+  //        "ipfs_hash": "bafybeicq6uvsrngfh4gtyztwaqa33y4r6o26sydu3uemszoto25hz3ohaq"
+  //       },
+  //       "token_utxos": [
+  //           {
+  //               "address": "YCk26dUcaXu8vu6zG3E2PrbBeECAV8RNFp",
+  //               "utxo": [
+  //                   {
+  //                       "txid": "ef98f8c8a583200bfe9026735412f06e69bace965d9419aac7d4f3e920a83540",
+  //                       "vout": 0,
+  //                       "value": 21000000,
+  //                       "status": {
+  //                           "confirmed": true,
+  //                           "block_height": 1911518
+  //                       }
+  //                   }
+  //               ]
+  //           },
+  //           {
+  //               "address": "YFSNphheS6jYN3wGaDveq7FeyFSdWgAzSj",
+  //               "utxo": [
+  //                   {
+  //                       "txid": "39080f8b60d69034b2a7b216da826ec38b758ca873df56a76281cb36bfcd97e1",
+  //                       "vout": 0,
+  //                       "value": 21000000,
+  //                       "status": {
+  //                           "confirmed": true,
+  //                           "block_height": 1911652
+  //                       }
+  //                   }
+  //               ]
+  //           }
+  //       ]
+  //   },
+  //   {
+  //     "tokenName": "token_name_2",
+  //     "balance": "2100000000",
+  //     "token_info": {
+  //       "token_type": "YA-token",
+  //       "amount": (number),
+  //       "units": (number),
+  //       "reissuable": (number),
+  //       "block_hash": "00000bfd8796fd3cfbdd19bd5901ebeb0666548c95e70d180ac69e1b78af3e82",
+  //       "ipfs_hash": (hash) (only if it has IPFS_HASH)
+  //     },
+  //     "token_utxos": [
+  //       {
+  //         "address": "address1"
+  //         "utxo": [
+  //           {
+  //             "txid": "2b7c934287aeefca6f3f4a0b507254c6812e0afa40c5e1d98eb943373ecfefc5",
+  //             "vout": 1,
+  //             "value": 12500000000,
+  //             "status": {
+  //                 "confirmed": true,
+  //                 "block_height": 1883466
+  //             }
+  //           }
+  //         ]
+  //       },
+  //       {
+  //         "address": "address2"
+  //         "utxo": [
+  //         ]
+  //       }
+  //     ]
+  //   }
+  // ]
+  const tokenBalanceQueryObj = {
+    "addresses": addresses
+  }
+  const token_balances = await lib.get_token_balance_promise(tokenBalanceQueryObj);
+  const token_utxos = await Promise.all(
+    token_balances.filter((token_balance) => {
+      if (token_balance.tokenName === 'YAC') {
+        return false
+      }
+      return true
+    }).map(async (token_balance) => {
+      const tokenUtxoQueryObj = {
+        "addresses": addresses,
+        "tokenName": token_balance.tokenName
+      }
+      const retTokenUtxos = await lib.get_token_utxos_promise(tokenUtxoQueryObj);
+      let token_utxos_obj = {}
+      for (const retTokenUtxo of retTokenUtxos) {
+        // Initialize utxo array for the address
+        if (!token_utxos_obj[retTokenUtxo.address]) {
+          token_utxos_obj[retTokenUtxo.address] = []
+        }
+        info = {
+          txid: retTokenUtxo.txid,
+          vout: retTokenUtxo.outputIndex,
+          value: retTokenUtxo.satoshis,
+          status: {
+            confirmed: true,
+            block_height: retTokenUtxo.height,
+          },
+        };
+        token_utxos_obj[retTokenUtxo.address].push(info);
+      }
+
+      let token_utxos_arr = Object.keys(token_utxos_obj).map((key) => { 
+        return {
+          "address" : key,
+          "utxo": token_utxos_obj[key]
+        }
+      })
+
+      let ret_token_info = await lib.get_token_info_promise(token_balance.tokenName)
+      let ipfs_hash = ret_token_info[token_balance.tokenName].ipfs_hash_cidv1 === null ? ret_token_info[token_balance.tokenName].ipfs_hash_cidv0 : ret_token_info[token_balance.tokenName].ipfs_hash_cidv1
+      return { token_name: token_balance.tokenName,
+               balance: token_balance.balance,
+               token_info: {
+                "token_type": ret_token_info[token_balance.tokenName].token_type,
+                "amount": ret_token_info[token_balance.tokenName].amount,
+                "units": ret_token_info[token_balance.tokenName].units,
+                "reissuable": ret_token_info[token_balance.tokenName].reissuable === 1,
+                "block_hash": ret_token_info[token_balance.tokenName].blockhash,
+                "ipfs_hash": ipfs_hash === null ? undefined : ipfs_hash,
+               },
+               token_utxos: token_utxos_arr };
+    })
+  )
+  return token_utxos
+}
+
 async function getAddressTxCounts(address, blockheight) {
   return new Promise((resolve, reject) => {
     db.get_utxo_mempool_info(blockheight, address, function (utxo_mempool_info, new_txcount) {
@@ -186,7 +324,7 @@ app.use('/api/address/:address/utxo', function (req, res) {
 app.post('/api/addresses/utxo', function (req, res) {
   // req.body.addresses is a string array containing duplicate free addresses
   lib.get_blockcount(async function (blockheight) {
-    const addresses = req.body.addresses;
+    const addresses = [...req.body.addresses];
     // This is an array of { address, utxo } pairs
     const utxos = await Promise.all(
       addresses.map(async (addr) => {
@@ -196,6 +334,20 @@ app.post('/api/addresses/utxo', function (req, res) {
     );
     res.send(utxos);
   });
+});
+
+app.use('/api/address/:address/token_utxo', async function (req, res) {
+  const addresses = [req.params.address];
+  const token_utxos = await getTokenUtxo(addresses);
+  res.send(token_utxos);
+});
+
+app.post('/api/addresses/token_utxo', async function (req, res) {
+  // req.body.addresses is a string array containing duplicate free addresses
+  const addresses = [...req.body.addresses];
+  // This is an array of { address, utxo } pairs
+  const token_utxos = await getTokenUtxo(addresses);
+  res.send(token_utxos);
 });
 
 app.use('/api/address/:address', function (req, res) {
@@ -208,7 +360,7 @@ app.use('/api/address/:address', function (req, res) {
 app.post('/api/addresses', function (req, res) {
   // req.body.addresses is a string array containing duplicate free addresses
   lib.get_blockcount(async function (blockheight) {
-    const addresses = req.body.addresses;
+    const addresses = [...req.body.addresses];
     // This is an array of object
     // return_info = {
     //   address: address,
