@@ -252,7 +252,8 @@ async function getTokenUtxo(addresses) {
         info = {
           txid: retTokenUtxo.txid,
           vout: retTokenUtxo.outputIndex,
-          value: retTokenUtxo.satoshis,
+          value: 0,
+          token_value: retTokenUtxo.satoshis,
           script: retTokenUtxo.script,
           status: {
             confirmed: true,
