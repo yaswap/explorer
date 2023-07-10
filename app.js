@@ -97,6 +97,10 @@ async function getAddressUtxo(address, blockheight) {
           if (utxo_mempool[i].timelockinfo !== null && !utxo_mempool[i].timelockinfo.isexpired) {
             continue;
           }
+          // Exclude the UTXO has value = 0 (this UTXO might be token UTXO)
+          if (utxo_mempool[i].amount === 0) {
+            continue;
+          }
           info = {
             txid: utxo_mempool[i].txid,
             vout: utxo_mempool[i].vout,
@@ -116,6 +120,11 @@ async function getAddressUtxo(address, blockheight) {
             function (loop) {
               // Update balance and transaction of addresses used as vin
               var i = loop.iteration();
+
+              // Exclude the UTXO has value = 0 (this UTXO might be token UTXO)
+              if (utxo[i].amount === 0) {
+                loop.next();
+              }
 
               // Exclude the timelocked UTXO wasn't expired because it can't be used at the moment
               if (utxo[i].timelockinfo === null || utxo[i].timelockinfo.isexpired) {
@@ -234,6 +243,9 @@ async function getTokenUtxo(addresses) {
   const token_utxos = await Promise.all(
     token_balances.filter((token_balance) => {
       if (token_balance.tokenName === 'YAC') {
+        return false
+      }
+      if (token_balance.balance === 0) {
         return false
       }
       return true
