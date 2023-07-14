@@ -157,7 +157,11 @@ async function getAddressUtxo(address, blockheight) {
   });
 }
 
-async function getTokenUtxo(addresses) {
+async function getNFTUtxo(addresses) {
+  return getTokenUtxo(addresses, true)
+}
+
+async function getTokenUtxo(addresses, isGetNFT = false) {
   // Return object:
   // [
   //     {
@@ -242,10 +246,12 @@ async function getTokenUtxo(addresses) {
   const token_balances = await lib.get_token_balance_promise(tokenBalanceQueryObj);
   const token_utxos = await Promise.all(
     token_balances.filter((token_balance) => {
-      if (token_balance.tokenName === 'YAC') {
+      if (token_balance.tokenName === 'YAC' || token_balance.balance === 0) {
         return false
       }
-      if (token_balance.balance === 0) {
+      if (!isGetNFT && token_balance.tokenName.indexOf('#') !== -1) {
+        return false
+      } else if (isGetNFT && token_balance.tokenName.indexOf('#') === -1) {
         return false
       }
       return true
@@ -288,7 +294,7 @@ async function getTokenUtxo(addresses) {
                balance: token_balance.balance,
                token_info: {
                 "token_type": ret_token_info[token_balance.tokenName].token_type,
-                "amount": ret_token_info[token_balance.tokenName].amount,
+                "amount": Number(ret_token_info[token_balance.tokenName].amount),
                 "units": ret_token_info[token_balance.tokenName].units,
                 "reissuable": ret_token_info[token_balance.tokenName].reissuable === 1,
                 "block_hash": ret_token_info[token_balance.tokenName].blockhash,
@@ -362,6 +368,20 @@ app.post('/api/addresses/token_utxo', async function (req, res) {
   // This is an array of { address, utxo } pairs
   const token_utxos = await getTokenUtxo(addresses);
   res.send(token_utxos);
+});
+
+app.use('/api/address/:address/nft', async function (req, res) {
+  const addresses = [req.params.address];
+  const nft_utxos = await getNFTUtxo(addresses);
+  res.send(nft_utxos);
+});
+
+app.post('/api/addresses/nft', async function (req, res) {
+  // req.body.addresses is a string array containing duplicate free addresses
+  const addresses = [...req.body.addresses];
+  // This is an array of { address, utxo } pairs
+  const nft_utxos = await getNFTUtxo(addresses);
+  res.send(nft_utxos);
 });
 
 app.use('/api/address/:address', function (req, res) {
