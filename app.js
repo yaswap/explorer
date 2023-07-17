@@ -122,12 +122,8 @@ async function getAddressUtxo(address, blockheight) {
               var i = loop.iteration();
 
               // Exclude the UTXO has value = 0 (this UTXO might be token UTXO)
-              if (utxo[i].amount === 0) {
-                loop.next();
-              }
-
               // Exclude the timelocked UTXO wasn't expired because it can't be used at the moment
-              if (utxo[i].timelockinfo === null || utxo[i].timelockinfo.isexpired) {
+              if (utxo[i].amount !== 0 && (utxo[i].timelockinfo === null || utxo[i].timelockinfo.isexpired)) {
                 db.get_tx(utxo[i].txid, function (tx) {
                   info = {
                     txid: utxo[i].txid,
