@@ -33,7 +33,6 @@ if (settings.heavy != true) {
     'getpeerinfo',
     'gettxoutsetinfo',
     'verifymessage',
-    'listtokens',
   ]);
 } else {
   // enable additional heavy api calls
@@ -69,7 +68,6 @@ if (settings.heavy != true) {
     'getsupply',
     'gettxoutsetinfo',
     'verifymessage',
-    'listtokens',
   ]);
 }
 // view engine setup
@@ -294,7 +292,7 @@ async function getTokenUtxo(addresses, isGetNFT = false) {
           // Remove the last character !
           queryTokenInfoName = token_balance.tokenName.slice(0, -1);
         }
-        let ret_token_info = await lib.get_token_info_promise(queryTokenInfoName);
+        let ret_token_info = await lib.get_token_info_promise(queryTokenInfoName, true);
         let ipfs_hash =
           ret_token_info[queryTokenInfoName].ipfs_hash_cidv1 === null
             ? ret_token_info[queryTokenInfoName].ipfs_hash_cidv0
@@ -455,6 +453,16 @@ app.post('/api/tx', function (req, res) {
   lib.send_rawtransaction(req.body.data, function (response) {
     res.json(response);
   });
+});
+
+app.post('/api/listtokens', async function (req, res) {
+  // req.body.addresses is a string array containing duplicate free addresses
+  const tokenName = req.body.tokenname;
+  const verbose = req.body.verbose || false;
+  console.log('TACA ===> api/listtokens/:tokenName, tokenName = ', tokenName);
+  // This is an array of { address, utxo } pairs
+  const token_info = await lib.get_token_info_promise(tokenName, verbose);
+  res.send(token_info);
 });
 
 app.use('/api', bitcoinapi.app);
