@@ -33,6 +33,7 @@ if (settings.heavy != true) {
     'getpeerinfo',
     'gettxoutsetinfo',
     'verifymessage',
+    'listtokens',
   ]);
 } else {
   // enable additional heavy api calls
@@ -68,6 +69,7 @@ if (settings.heavy != true) {
     'getsupply',
     'gettxoutsetinfo',
     'verifymessage',
+    'listtokens',
   ]);
 }
 // view engine setup
