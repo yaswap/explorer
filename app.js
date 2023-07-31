@@ -154,7 +154,7 @@ async function getAddressUtxo(address, blockheight) {
 }
 
 async function getNFTUtxo(addresses) {
-  return getTokenUtxo(addresses, true)
+  return getTokenUtxo(addresses, true);
 }
 
 async function getTokenUtxo(addresses, isGetNFT = false) {
@@ -237,69 +237,82 @@ async function getTokenUtxo(addresses, isGetNFT = false) {
   //   }
   // ]
   const tokenBalanceQueryObj = {
-    "addresses": addresses
-  }
+    addresses: addresses,
+  };
   const token_balances = await lib.get_token_balance_promise(tokenBalanceQueryObj);
   const token_utxos = await Promise.all(
-    token_balances.filter((token_balance) => {
-      if (token_balance.tokenName === 'YAC' || token_balance.balance === 0) {
-        return false
-      }
-      if (!isGetNFT && token_balance.tokenName.indexOf('#') !== -1) {
-        return false
-      } else if (isGetNFT && token_balance.tokenName.indexOf('#') === -1) {
-        return false
-      }
-      return true
-    }).map(async (token_balance) => {
-      const tokenUtxoQueryObj = {
-        "addresses": addresses,
-        "tokenName": token_balance.tokenName
-      }
-      const retTokenUtxos = await lib.get_token_utxos_promise(tokenUtxoQueryObj);
-      let token_utxos_obj = {}
-      for (const retTokenUtxo of retTokenUtxos) {
-        // Initialize utxo array for the address
-        if (!token_utxos_obj[retTokenUtxo.address]) {
-          token_utxos_obj[retTokenUtxo.address] = []
+    token_balances
+      .filter((token_balance) => {
+        if (token_balance.tokenName === 'YAC' || token_balance.balance === 0) {
+          return false;
         }
-        info = {
-          txid: retTokenUtxo.txid,
-          vout: retTokenUtxo.outputIndex,
-          value: 0,
-          token_value: retTokenUtxo.satoshis,
-          script: retTokenUtxo.script,
-          status: {
-            confirmed: true,
-            block_height: retTokenUtxo.height,
-          },
-        };
-        token_utxos_obj[retTokenUtxo.address].push(info);
-      }
-
-      let token_utxos_arr = Object.keys(token_utxos_obj).map((key) => { 
-        return {
-          "address" : key,
-          "utxo": token_utxos_obj[key]
+        if (!isGetNFT && token_balance.tokenName.indexOf('#') !== -1) {
+          return false;
+        } else if (isGetNFT && token_balance.tokenName.indexOf('#') === -1) {
+          return false;
         }
+        return true;
       })
+      .map(async (token_balance) => {
+        const tokenUtxoQueryObj = {
+          addresses: addresses,
+          tokenName: token_balance.tokenName,
+        };
+        const retTokenUtxos = await lib.get_token_utxos_promise(tokenUtxoQueryObj);
+        let token_utxos_obj = {};
+        for (const retTokenUtxo of retTokenUtxos) {
+          // Initialize utxo array for the address
+          if (!token_utxos_obj[retTokenUtxo.address]) {
+            token_utxos_obj[retTokenUtxo.address] = [];
+          }
+          info = {
+            txid: retTokenUtxo.txid,
+            vout: retTokenUtxo.outputIndex,
+            value: 0,
+            token_value: retTokenUtxo.satoshis,
+            script: retTokenUtxo.script,
+            status: {
+              confirmed: true,
+              block_height: retTokenUtxo.height,
+            },
+          };
+          token_utxos_obj[retTokenUtxo.address].push(info);
+        }
 
-      let ret_token_info = await lib.get_token_info_promise(token_balance.tokenName)
-      let ipfs_hash = ret_token_info[token_balance.tokenName].ipfs_hash_cidv1 === null ? ret_token_info[token_balance.tokenName].ipfs_hash_cidv0 : ret_token_info[token_balance.tokenName].ipfs_hash_cidv1
-      return { token_name: token_balance.tokenName,
-               balance: token_balance.balance,
-               token_info: {
-                "token_type": ret_token_info[token_balance.tokenName].token_type,
-                "amount": Number(ret_token_info[token_balance.tokenName].amount),
-                "units": ret_token_info[token_balance.tokenName].units,
-                "reissuable": ret_token_info[token_balance.tokenName].reissuable === 1,
-                "block_hash": ret_token_info[token_balance.tokenName].blockhash,
-                "ipfs_hash": ipfs_hash === null ? undefined : ipfs_hash,
-               },
-               token_utxos: token_utxos_arr };
-    })
-  )
-  return token_utxos
+        let token_utxos_arr = Object.keys(token_utxos_obj).map((key) => {
+          return {
+            address: key,
+            utxo: token_utxos_obj[key],
+          };
+        });
+
+        let queryTokenInfoName = token_balance.tokenName;
+        const isOwnerToken = token_balance.tokenName.endsWith('!');
+        if (isOwnerToken) {
+          // Remove the last character !
+          queryTokenInfoName = token_balance.tokenName.slice(0, -1);
+        }
+        let ret_token_info = await lib.get_token_info_promise(queryTokenInfoName);
+        let ipfs_hash =
+          ret_token_info[queryTokenInfoName].ipfs_hash_cidv1 === null
+            ? ret_token_info[queryTokenInfoName].ipfs_hash_cidv0
+            : ret_token_info[queryTokenInfoName].ipfs_hash_cidv1;
+        return {
+          token_name: token_balance.tokenName,
+          balance: token_balance.balance,
+          token_info: {
+            token_type: isOwnerToken ? 'Owner-token' : ret_token_info[queryTokenInfoName].token_type,
+            amount: Number(isOwnerToken ? 1 : ret_token_info[queryTokenInfoName].amount),
+            units: isOwnerToken ? 0 : ret_token_info[queryTokenInfoName].units,
+            reissuable: isOwnerToken ? false : ret_token_info[queryTokenInfoName].reissuable === 1,
+            block_hash: ret_token_info[queryTokenInfoName].blockhash,
+            ipfs_hash: isOwnerToken ? null : ipfs_hash === null ? undefined : ipfs_hash,
+          },
+          token_utxos: token_utxos_arr,
+        };
+      })
+  );
+  return token_utxos;
 }
 
 async function getAddressTxCounts(address, blockheight) {
