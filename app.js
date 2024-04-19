@@ -258,6 +258,12 @@ async function getTokenUtxo(addresses, isGetNFT = false) {
           addresses: addresses,
           tokenName: token_balance.tokenName,
         };
+
+        let earliest_block_height = 1;
+        let latest_block_height = 1;
+        let earliest_timestamp = 1;
+        let latest_timestamp = 1;
+
         const retTokenUtxos = await lib.get_token_utxos_promise(tokenUtxoQueryObj);
         let token_utxos_obj = {};
         for (const retTokenUtxo of retTokenUtxos) {
@@ -265,6 +271,20 @@ async function getTokenUtxo(addresses, isGetNFT = false) {
           if (!token_utxos_obj[retTokenUtxo.address]) {
             token_utxos_obj[retTokenUtxo.address] = [];
           }
+
+          // Find out earliest and latest block height
+          if (earliest_block_height === 1) {
+            earliest_block_height = retTokenUtxo.height;
+          } else if (earliest_block_height > retTokenUtxo.height) {
+            earliest_block_height = retTokenUtxo.height;
+          }
+
+          if (latest_block_height === 1) {
+            latest_block_height = retTokenUtxo.height;
+          } else if (latest_block_height < retTokenUtxo.height) {
+            latest_block_height = retTokenUtxo.height;
+          }
+
           info = {
             txid: retTokenUtxo.txid,
             vout: retTokenUtxo.outputIndex,
@@ -297,9 +317,18 @@ async function getTokenUtxo(addresses, isGetNFT = false) {
           ret_token_info[queryTokenInfoName].ipfs_hash_cidv1 === null
             ? ret_token_info[queryTokenInfoName].ipfs_hash_cidv0
             : ret_token_info[queryTokenInfoName].ipfs_hash_cidv1;
+
+        // Find out earliest and latest timestamps
+        earliest_timestamp = await db.get_blocktime(earliest_block_height);
+        latest_timestamp = await db.get_blocktime(latest_block_height);
+
         return {
           token_name: token_balance.tokenName,
           balance: token_balance.balance,
+          earliest_block_height,
+          latest_block_height,
+          earliest_timestamp,
+          latest_timestamp,
           token_info: {
             token_type: isOwnerToken ? 'Owner-token' : ret_token_info[queryTokenInfoName].token_type,
             amount: Number(isOwnerToken ? 1 : ret_token_info[queryTokenInfoName].amount),
