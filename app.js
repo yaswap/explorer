@@ -110,6 +110,16 @@ async function getAddressUtxo(address, blockheight) {
               block_height: utxo_mempool[i].blockutxoheight,
             },
           };
+
+          if (utxo_mempool[i].timelockinfo) {
+            info['script'] = utxo_mempool[i].timelockinfo.scriptpubkey
+            info['timelockinfo'] = {}
+            if (utxo_mempool[i].timelockinfo.iscltv) {
+              info['timelockinfo']['locktime'] = utxo_mempool[i].timelockinfo.locktime
+            } else {
+              info['timelockinfo']['sequence'] = utxo_mempool[i].timelockinfo.locktime
+            }
+          }
           utxo_info.push(info);
         }
         resolve(utxo_info);
@@ -136,6 +146,17 @@ async function getAddressUtxo(address, blockheight) {
                       block_time: tx.timestamp,
                     },
                   };
+
+                  if (utxo[i].timelockinfo) {
+                    info['script'] = utxo[i].timelockinfo.scriptpubkey
+                    info['timelockinfo'] = {}
+                    if (utxo[i].timelockinfo.iscltv) {
+                      info['timelockinfo']['locktime'] = utxo[i].timelockinfo.locktime
+                    } else {
+                      info['timelockinfo']['sequence'] = utxo[i].timelockinfo.locktime
+                    }
+                  }
+
                   utxo_info.push(info);
                   loop.next();
                 });
@@ -488,7 +509,6 @@ app.post('/api/listtokens', async function (req, res) {
   // req.body.addresses is a string array containing duplicate free addresses
   const tokenName = req.body.tokenname;
   const verbose = req.body.verbose || false;
-  console.log('TACA ===> api/listtokens/:tokenName, tokenName = ', tokenName);
   // This is an array of { address, utxo } pairs
   const token_info = await lib.get_token_info_promise(tokenName, verbose);
   res.send(token_info);

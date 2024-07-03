@@ -8,6 +8,7 @@ var TimelockUtxoInfoSchema = new Schema({
   locktime: { type: Number, default: 0 },
   timetouse_number: { type: Number, default: 0 },
   timetouse_string: { type: String, default: '' },
+  scriptpubkey: { type: String, index: true, default: '' }, // if it is not empty => P2PKH script
 });
 
 var AddressUtxoSchema = new Schema({
