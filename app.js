@@ -608,7 +608,7 @@ app.use('/ext/gettx/:txid', function (req, res) {
             });
           });
         } else {
-          res.send({ error: 'tx not found.', hash: txid });
+          res.status(404).json({ error: 'tx not found.', hash: txid });
         }
       });
     }
